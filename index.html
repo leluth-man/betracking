@@ -371,5 +371,29 @@ function quitterAdmin() {
 // Chargement au démarrage
 chargerDonnees();
 </script>
+  <script>
+async function rechercherColis() {
+  const input = document.querySelector("input").value.trim().toUpperCase();
+
+  const url = "https://opensheet.elk.sh/TON_ID/Feuille1";
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const colis = data.find(c => c.ID === input);
+
+  if (colis) {
+    alert(
+      "✅ Colis trouvé\n\n" +
+      "Client: " + colis.CLIENT + "\n" +
+      "Statut: " + colis.STATUT + "\n" +
+      "Origine: " + colis.ORIGINE + "\n" +
+      "Destination: " + colis.DESTINATION
+    );
+  } else {
+    alert("❌ Numéro introuvable");
+  }
+}
+</script>
 </body>
 </html>
