@@ -153,6 +153,7 @@ footer strong{color:var(--or)}
         <button type="button" class="btn-search" onclick="rechercherColis()">🔍</button>
       </div>
     </div>
+    <div id="resultat" style="margin-top:20px; color:white;"></div>
     <div class="search-hint">Numéro communiqué par <span class="hint-badge">WhatsApp</span>
     — <span id="nb-dossiers" style="color:var(--or)"></span></div>
   </div>
@@ -214,7 +215,7 @@ footer strong{color:var(--or)}
     <div class="contact-tag">Service client</div>
     <div class="contact-title">Besoin d'aide ? Contactez-nous</div>
     <div class="contact-btns">
-      <a href="https://wa.me/237620219430" class="cbtn cbtn-wa">💬 WhatsApp Cameroun — +237 620 219 430</a>
+      <a href="https://wa.me/8615642872387" class="cbtn cbtn-wa">💬 WhatsApp — +86 156 4287 2387</a>
       <a href="https://wa.me/8615642872387" class="cbtn cbtn-cn">📞 Bureau Chine — +86 156 4287 2387</a>
     </div>
   </div>
@@ -385,13 +386,68 @@ async function rechercherColis() {
   if (colis) {
     alert(
       "✅ Colis trouvé\n\n" +
-      "Client: " + colis.CLIENT + "\n" +
-      "Statut: " + colis.STATUT + "\n" +
-      "Origine: " + colis.ORIGINE + "\n" +
-      "Destination: " + colis.DESTINATION
+      "Client: " + colis["CLIENTS"] + "\n" +
+      "Téléphone: " + colis["PHONE NUMBER"] + "\n" +
+      "Statut: " + colis["STATUTS"] + "\n" +
+      "Origine: " + colis["VILLE DE DEPA"] + "\n" +
+      "Destination: " + colis["DESTINATIONS"] + "\n" +
+      "Départ: " + colis["DATES DE DEP"] + "\n" +
+      "Arrivée: " + colis["DATES D'ARRIVER"]
     );
   } else {
     alert("❌ Numéro introuvable");
+  }
+}
+</script>
+  <script>
+function genererTimeline(statut) {
+  const steps = ["RECU", "TRANSIT", "DOUANE", "ARRIVE", "LIVRE"];
+
+  return steps.map(step => {
+    const active = steps.indexOf(step) <= steps.indexOf(statut);
+
+    return `
+      <div style="display:flex; align-items:center; margin:10px 0;">
+        <div style="
+          width:20px;
+          height:20px;
+          border-radius:50%;
+          background:${active ? '#00ff88' : '#555'};
+          margin-right:10px;">
+        </div>
+        <div style="color:${active ? '#00ff88' : '#aaa'};">
+          ${step}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function rechercherColis() {
+  const input = document.querySelector("input").value.trim().toUpperCase();
+
+  const url = "https://opensheet.elk.sh/1fPPcx6Y8HhxIgiHjyHGVUhSxlo2gc2iW5Eh1LNpWFRg/Feuille1";
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const colis = data.find(c => c.ID === input);
+
+  const zone = document.getElementById("resultat");
+
+  if (colis) {
+    zone.innerHTML = `
+      <h3>📦 ${colis.ID}</h3>
+      <p>Client: ${colis["CLIENTS"]}</p>
+      <p>Destination: ${colis["DESTINATIONS"]}</p>
+      <p>Statut: ${colis["STATUTS"]}</p>
+
+      <div style="margin-top:20px;">
+        ${genererTimeline(colis["STATUTS"])}
+      </div>
+    `;
+  } else {
+    zone.innerHTML = `<p style="color:red;">❌ Numéro introuvable</p>`;
   }
 }
 </script>
