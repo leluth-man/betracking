@@ -51,57 +51,76 @@
 
 <body>
 
-  <h1>📦 Suivi de colis B.E</h1>
+<h1>📦 Suivi de colis B.E</h1>
 
-  <input id="trackingInput" placeholder="Entrez votre numéro">
-  <button onclick="rechercherColis()">🔍</button>
+<input id="trackingInput" placeholder="Entrez votre numéro">
+<button type="button" onclick="rechercherColis()">🔍</button>
 
-  <div id="resultat"></div>
+<div id="resultat"></div>
 
-  <script>
-    const API_URL = "https://opensheet.elk.sh/1fPPcx6Y8HhxIgiHjyHGVUhSxlo2gc2iW5Eh1LNpWFRg/Feuille1";
+<script>
+const API_URL = "https://opensheet.elk.sh/1fPPcx6Y8HhxIgiHjyHGVUhSxlo2gc2iW5Eh1LNpWFRg/Feuille1";
 
-    function genererTimeline(statut) {
-      const steps = ["RECU", "TRANSIT", "DOUANE", "ARRIVE", "LIVRE"];
+// 🔥 Permet d'utiliser la touche ENTER
+document.getElementById("trackingInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    rechercherColis();
+  }
+});
 
-      return steps.map(step => {
-        const active = steps.indexOf(step) <= steps.indexOf(statut);
+function genererTimeline(statut) {
+  const steps = ["RECU", "TRANSIT", "DOUANE", "ARRIVE", "LIVRE"];
 
-        return `
-          <div class="step">
-            <div class="circle" style="background:${active ? '#00ff88' : '#555'}"></div>
-            <div style="color:${active ? '#00ff88' : '#aaa'}">${step}</div>
-          </div>
-        `;
-      }).join("");
+  return steps.map(step => {
+    const active = steps.indexOf(step) <= steps.indexOf(statut);
+
+    return `
+      <div style="margin:5px;">
+        <span style="color:${active ? 'lime' : 'gray'}">●</span>
+        ${step}
+      </div>
+    `;
+  }).join("");
+}
+
+async function rechercherColis() {
+  console.log("🔍 Recherche lancée"); // DEBUG
+
+  const input = document.getElementById("trackingInput").value.trim().toUpperCase();
+
+  if (!input) {
+    alert("Entre un numéro");
+    return;
+  }
+
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    console.log("DATA:", data); // DEBUG
+
+    const colis = data.find(c => c.ID === input);
+
+    const zone = document.getElementById("resultat");
+
+    if (colis) {
+      zone.innerHTML = `
+        <h2>${colis.ID}</h2>
+        <p>${colis["CLIENTS"]}</p>
+        <p>${colis["STATUTS"]}</p>
+        ${genererTimeline(colis["STATUTS"])}
+      `;
+    } else {
+      zone.innerHTML = `<p style="color:red;">Introuvable</p>`;
     }
 
-    async function rechercherColis() {
-      const input = document.getElementById("trackingInput").value.trim().toUpperCase();
-
-      const res = await fetch(API_URL);
-      const data = await res.json();
-
-      const colis = data.find(c => c.ID === input);
-
-      const zone = document.getElementById("resultat");
-
-      if (colis) {
-        zone.innerHTML = `
-          <h2>📦 ${colis.ID}</h2>
-          <p>Client: ${colis["CLIENTS"]}</p>
-          <p>Destination: ${colis["DESTINATIONS"]}</p>
-          <p>Statut: ${colis["STATUTS"]}</p>
-
-          <div style="margin-top:20px;">
-            ${genererTimeline(colis["STATUTS"])}
-          </div>
-        `;
-      } else {
-        zone.innerHTML = `<p style="color:red;">❌ Numéro introuvable</p>`;
-      }
-    }
-  </script>
+  } catch (error) {
+    console.error("ERREUR:", error);
+    alert("Erreur connexion Google Sheets");
+  }
+}
+</script>
 
 </body>
+  
 </html>
